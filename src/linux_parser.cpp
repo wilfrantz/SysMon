@@ -2,6 +2,8 @@
 
 #include <dirent.h>
 #include <unistd.h>
+#include <iostream>
+#include <string>
 
 #include <sstream>
 #include <string>
@@ -72,7 +74,31 @@ vector<int> LinuxParser::Pids() {
 float LinuxParser::MemoryUtilization() { return 0.0; }
 
 // TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+// Information about system up time exists in the /proc/uptime file.
+// This file contains two numbers (values in seconds):
+// 1- the uptime of the system (including time spent in suspend) and
+// 2- the amount of time spent in the idle process.
+long LinuxParser::UpTime() {
+  long uptime = 0.0;
+  long idle = 0.0;
+  std::string line{};
+
+  std::ifstream uptimeFile(kProcDirectory + kUptimeFilename);
+
+  if (uptimeFile.is_open()) {
+    while (std::getline(uptimeFile, line)) {
+      std::istringstream linestream(line);
+      std::string uptimeStr;
+      std::string idleStr;
+      while (linestream >> uptimeStr >> idleStr) {
+        idle = std::stol(idleStr);
+        uptime = std::stol(uptimeStr);
+      }
+    }
+  }
+
+  return uptime;
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
