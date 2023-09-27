@@ -70,13 +70,12 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
+// Read and return the system memory utilization
 // NOTE: Information about memory utilization exists in the `/proc/meminfo`
-// file.
 float LinuxParser::MemoryUtilization() {
-  std::string line, data, key;
-
-  std::unordered_map<std::string, std::string> dataMap;
+  float data = 0.0f;
+  std::string line, key;
+  std::unordered_map<std::string, float> dataMap;
 
   std::ifstream meminfofile(kProcDirectory + kMeminfoFilename);
 
@@ -88,12 +87,19 @@ float LinuxParser::MemoryUtilization() {
         index++;
       }
     }
+    meminfofile.close();
   }
 
-  meminfofile.close();
+  float memTotal(0.0f), memFree(0.0f);
 
-  // MemTotal - MemFree;
-  return 0.0;
+  while (!dataMap.empty()) {
+    for (const auto& elem : dataMap) {
+      if (elem.first == "MemTotal:") memTotal = elem.second;
+      if (elem.first == "MemFree:") memFree = elem.second;
+    }
+  }
+
+  return (memTotal - memFree);
 }
 
 // Read and return the system uptime
