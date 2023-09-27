@@ -74,39 +74,32 @@ vector<int> LinuxParser::Pids() {
 // NOTE: Information about memory utilization exists in the `/proc/meminfo`
 float LinuxParser::MemoryUtilization() {
   float data = 0.0f;
+  float memFree(0.0f);
+  float memTotal(0.0f);
+
   std::string line, key;
   std::unordered_map<std::string, float> dataMap;
-
   std::ifstream meminfofile(kProcDirectory + kMeminfoFilename);
 
   if (meminfofile.is_open()) {
-    int index = 0;
-    while (std::getline(meminfofile, line)) {
-      while ((index <= 4) && (meminfofile >> key >> data)) {
-        dataMap[key] = data;
-        index++;
-      }
-    }
-    meminfofile.close();
-  }
-
-  float memTotal(0.0f), memFree(0.0f);
-
-  while (!dataMap.empty()) {
-    for (const auto& elem : dataMap) {
-      if (elem.first == "MemTotal:") memTotal = elem.second;
-      if (elem.first == "MemFree:") memFree = elem.second;
+    while (meminfofile >> key >> data) {
+      dataMap[key] = data;
     }
   }
+
+  if (dataMap.find("MemTotal:") != dataMap.end())
+    memTotal = dataMap["MemTotal:"];
+
+  if (dataMap.find("MemFree:") != dataMap.end()) memFree = dataMap["MemFree:"];
 
   return (memTotal - memFree);
 }
 
 // Read and return the system uptime
-// Information about system up time exists in the /proc/uptime file.
+// NOTE: Information about system up time exists in the /proc/uptime file.
 // This file contains two numbers (values in seconds):
-// 1- the uptime of the system (including time spent in suspend) and
-// 2- the amount of time spent in the idle process.
+//    1- the uptime of the system (including time spent in suspend) and
+//    2- the amount of time spent in the idle process.
 long LinuxParser::UpTime() {
   std::string line, uptimeStr;
 
@@ -118,8 +111,6 @@ long LinuxParser::UpTime() {
       linestream >> uptimeStr;
     }
   }
-
-  uptimeFile.close();
 
   return stol(uptimeStr);
 }
