@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <unistd.h>
 
+#include <unordered_map>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -70,15 +71,38 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+// NOTE: Information about memory utilization exists in the `/proc/meminfo`
+// file.
+float LinuxParser::MemoryUtilization() {
+  std::string line, data, key;
 
-// TODO: Read and return the system uptime
+  std::unordered_map<std::string, std::string> dataMap;
+
+  std::ifstream meminfofile(kProcDirectory + kMeminfoFilename);
+
+  if (meminfofile.is_open()) {
+    int index = 0;
+    while (std::getline(meminfofile, line)) {
+      while ((index <= 4) && (meminfofile >> key >> data)) {
+        dataMap[key] = data;
+        index++;
+      }
+    }
+  }
+
+  meminfofile.close();
+
+  // MemTotal - MemFree;
+  return 0.0;
+}
+
+// Read and return the system uptime
 // Information about system up time exists in the /proc/uptime file.
 // This file contains two numbers (values in seconds):
 // 1- the uptime of the system (including time spent in suspend) and
 // 2- the amount of time spent in the idle process.
 long LinuxParser::UpTime() {
-  std::string line{}, uptimeStr;
+  std::string line, uptimeStr;
 
   std::ifstream uptimeFile(kProcDirectory + kUptimeFilename);
 
@@ -88,6 +112,8 @@ long LinuxParser::UpTime() {
       linestream >> uptimeStr;
     }
   }
+
+  uptimeFile.close();
 
   return stol(uptimeStr);
 }
