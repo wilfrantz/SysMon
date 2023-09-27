@@ -2,9 +2,8 @@
 
 #include <dirent.h>
 #include <unistd.h>
-#include <iostream>
-#include <string>
 
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -79,25 +78,18 @@ float LinuxParser::MemoryUtilization() { return 0.0; }
 // 1- the uptime of the system (including time spent in suspend) and
 // 2- the amount of time spent in the idle process.
 long LinuxParser::UpTime() {
-  long uptime = 0.0;
-  long idle = 0.0;
-  std::string line{};
+  std::string line{}, uptimeStr;
 
   std::ifstream uptimeFile(kProcDirectory + kUptimeFilename);
 
   if (uptimeFile.is_open()) {
     while (std::getline(uptimeFile, line)) {
       std::istringstream linestream(line);
-      std::string uptimeStr;
-      std::string idleStr;
-      while (linestream >> uptimeStr >> idleStr) {
-        idle = std::stol(idleStr);
-        uptime = std::stol(uptimeStr);
-      }
+      linestream >> uptimeStr;
     }
   }
 
-  return uptime;
+  return stol(uptimeStr);
 }
 
 // TODO: Read and return the number of jiffies for the system
