@@ -17,6 +17,7 @@ const std::string kMeminfoFilename{"/meminfo"};
 const std::string kVersionFilename{"/version"};
 const std::string kOSPath{"/etc/os-release"};
 const std::string kPasswordPath{"/etc/passwd"};
+const std::string kTimerListFilename{"/timer_list"};
 
 // System
 float MemoryUtilization();
@@ -40,6 +41,7 @@ enum CPUStates {
   kGuest_,
   kGuestNice_
 };
+
 std::vector<std::string> CpuUtilization();
 long Jiffies();
 long ActiveJiffies();

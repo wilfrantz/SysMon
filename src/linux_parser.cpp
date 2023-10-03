@@ -115,21 +115,86 @@ long LinuxParser::UpTime() {
   return stol(uptimeStr);
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
+// Read and return the number of jiffies for the system
+// NOTE: “jiffies” holds the number of ticks that have occurred since the system booted.
+// https://www.linkedin.com/pulse/linux-kernel-system-timer-jiffies-mohamed-yasser/
+long LinuxParser::Jiffies() {
+  std::string line, key, data;
+  std::ifstream jifFile(kProcDirectory + kTimerListFilename);
 
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid [[maybe_unused]]) { return 0; }
+  if (jifFile.is_open()) {
+    while (std::getline(jifFile, line)) {
+      std::istringstream lineStream(line);
+      lineStream >> key >> data;
 
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
+      if (key == "jiffies") {
+        return std::stol(data);
+      }
+    }
+  }
+  return 0.0;
+}
 
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+// Read and return the number of active jiffies for a PID
+long LinuxParser::ActiveJiffies(int pid) {
+  std::string line, data;
+  std::vector<string> activeJiffies;
+  std::ifstream jifFile(kProcDirectory + to_string(pid) + kStatFilename);
 
-// TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+  if (jifFile.is_open()) {
+    while (std::getline(jifFile, line)) {
+      std::istringstream lineStream(line);
+      lineStream >> data;
+      activeJiffies.push_back(data);
+    }
+  }
+
+  if (activeJiffies.size() > 14)
+    return stol(activeJiffies[13] + activeJiffies[14]);
+  else
+    return 0.0;
+}
+
+// Read and return the number of active jiffies for the system
+long LinuxParser::ActiveJiffies() {
+  std::vector<std::string> cpu = CpuUtilization();
+
+  return std::stol(cpu[CPUStates::kUser_]) + std::stol(cpu[CPUStates::kNice_]) +
+         std::stol(cpu[CPUStates::kSystem_]) +
+         std::stol(cpu[CPUStates::kIRQ_]) +
+         std::stol(cpu[CPUStates::kSoftIRQ_]) +
+         std::stol(cpu[CPUStates::kSteal_]);
+}
+
+// Read and return the number of idle jiffies for the system
+long LinuxParser::IdleJiffies() {
+  std::vector<std::string> cpu = CpuUtilization();
+
+  return std::stol(cpu[CPUStates::kIdle_]) +
+         std::stol(cpu[CPUStates::kIOwait_]);
+}
+
+// Read and return CPU utilization
+vector<string> LinuxParser::CpuUtilization() { 
+  std::string line, key, data;
+  std::vector <std::string> cpuCore;
+  std::ifstream cpuFD (kProcDirectory + kStatFilename);
+
+  if (cpuFD.is_open()){
+    while (std::getline(cpuFD, line)){
+      std::istringstream lineStream(line);
+      lineStream >> key;
+      if (key == "cpu") {
+        for (int i = 0; i < CPUStates::kGuestNice_; i++) {
+          lineStream >> data;
+          cpuCore.push_back(data);
+        }
+      }
+    }
+  }
+  
+
+  return {}; }
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() { return 0; }
