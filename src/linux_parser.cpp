@@ -3,10 +3,10 @@
 #include <dirent.h>
 #include <unistd.h>
 
-#include <unordered_map>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using std::stof;
@@ -73,7 +73,7 @@ vector<int> LinuxParser::Pids() {
 // Read and return the system memory utilization
 // NOTE: Information about memory utilization exists in the `/proc/meminfo`
 float LinuxParser::MemoryUtilization() {
-  float data = 0.0f;
+  float data(0.0f);
   float memFree(0.0f);
   float memTotal(0.0f);
 
